@@ -75,9 +75,9 @@ UdpProtocol::Init(Udp *udp,
    _queue = queue;
    _local_connect_status = status;
 
-   _peer_addr.sin_family = AF_INET;
-   _peer_addr.sin_addr.s_addr = inet_addr(ip);
-   _peer_addr.sin_port = htons(port);
+   //_peer_addr.sin_family = AF_INET;
+   //_peer_addr.sin_addr.s_addr = inet_addr(ip);
+   //_peer_addr.sin_port = htons(port);
    
    do {
       _magic_number = rand();
@@ -179,7 +179,7 @@ UdpProtocol::GetEvent(UdpProtocol::Event &e)
    return true;
 }
 
-
+/*
 bool
 UdpProtocol::OnLoopPoll(void *cookie)
 {
@@ -256,7 +256,7 @@ UdpProtocol::OnLoopPoll(void *cookie)
 
    return true;
 }
-
+*/
 void
 UdpProtocol::Disconnect()
 {
@@ -290,14 +290,13 @@ UdpProtocol::SendMsg(UdpMsg *msg)
 }
 
 bool
-UdpProtocol::HandlesMsg(sockaddr_in &from,
+UdpProtocol::HandlesMsg(const char *from,
                         UdpMsg *msg)
 {
    if (!_udp) {
       return false;
    }
-   return _peer_addr.sin_addr.S_un.S_addr == from.sin_addr.S_un.S_addr &&
-          _peer_addr.sin_port == from.sin_port;
+   return _peer_addr == from;
 }
 
 void
@@ -734,7 +733,8 @@ UdpProtocol::PumpSendQueue()
          _oo_packet.msg = entry.msg;
          _oo_packet.dest_addr = entry.dest_addr;
       } else {
-         ASSERT(entry.dest_addr.sin_addr.s_addr);
+          ASSERT(entry.dest_addr);
+          //ASSERT(entry.dest_addr.sin_addr.s_addr);
 
          _udp->SendTo((char *)entry.msg, entry.msg->PacketSize(), 0,
                       (struct sockaddr *)&entry.dest_addr, sizeof entry.dest_addr);

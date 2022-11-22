@@ -34,7 +34,9 @@ public:
    virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout);
 
 public:
-   virtual void OnMsg(sockaddr_in &from, UdpMsg *msg, int len);
+	//virtual void OnMsg(sockaddr_in& from, UdpMsg* msg, int len);
+	virtual void OnMsg(const char* from, UdpMsg* msg, int len);
+	bool OnPlayerTextMessageReceived(const char* entityId, const char* textMessage);
 
 protected:
    GGPOErrorCode PlayerHandleToQueue(GGPOPlayerHandle player, int *queue);

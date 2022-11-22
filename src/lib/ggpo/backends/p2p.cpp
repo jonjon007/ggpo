@@ -239,6 +239,10 @@ int Peer2PeerBackend::PollNPlayers(int current_frame)
    return total_min_confirmed;
 }
 
+bool Peer2PeerBackend::OnPlayerTextMessageReceived(const char* entityId, const char* textMessage) {
+    return _udp.OnPlayerTextMessageReceived(entityId, textMessage);
+}
+
 
 GGPOErrorCode
 Peer2PeerBackend::AddPlayer(GGPOPlayer *player,
@@ -583,7 +587,8 @@ Peer2PeerBackend::PlayerHandleToQueue(GGPOPlayerHandle player, int *queue)
 
  
 void
-Peer2PeerBackend::OnMsg(sockaddr_in &from, UdpMsg *msg, int len)
+//Peer2PeerBackend::OnMsg(sockaddr_in& from, UdpMsg* msg, int len)
+Peer2PeerBackend::OnMsg(const char* from, UdpMsg* msg, int len)
 {
    for (int i = 0; i < _num_players; i++) {
       if (_endpoints[i].HandlesMsg(from, msg)) {

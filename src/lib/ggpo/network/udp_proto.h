@@ -57,7 +57,7 @@ public:
    };
 
 public:
-   virtual bool OnLoopPoll(void *cookie);
+   //virtual bool OnLoopPoll(void *cookie);
 
 public:
    UdpProtocol();
@@ -72,7 +72,7 @@ public:
    bool IsRunning() { return _current_state == Running; }
    void SendInput(GameInput &input);
    void SendInputAck();
-   bool HandlesMsg(sockaddr_in &from, UdpMsg *msg);
+   bool HandlesMsg(const char *from, UdpMsg *msg);
    void OnMsg(UdpMsg *msg, int len);
    void Disconnect();
   
@@ -94,14 +94,14 @@ protected:
    };
    struct QueueEntry {
       int         queue_time;
-      sockaddr_in dest_addr;
+      char * dest_addr;
       UdpMsg      *msg;
 
       QueueEntry() {}
-      QueueEntry(int time, sockaddr_in &dst, UdpMsg *m) : queue_time(time), dest_addr(dst), msg(m) { }
+      QueueEntry(int time, char *dst, UdpMsg *m) : queue_time(time), dest_addr(dst), msg(m) { }
    };
 
-   bool CreateSocket(int retries);
+//   bool CreateSocket(int retries);
    void UpdateNetworkStats(void);
    void QueueEvent(const UdpProtocol::Event &evt);
    void ClearSendQueue(void);
@@ -127,7 +127,7 @@ protected:
     * Network transmission information
     */
    Udp            *_udp;
-   sockaddr_in    _peer_addr; 
+   char           *_peer_addr; // Peer entity key
    uint16         _magic_number;
    int            _queue;
    uint16         _remote_magic_number;
@@ -136,7 +136,7 @@ protected:
    int            _oop_percent;
    struct {
       int         send_time;
-      sockaddr_in dest_addr;
+      char*       dest_addr;
       UdpMsg*     msg;
    }              _oo_packet;
    RingBuffer<QueueEntry, 64> _send_queue;

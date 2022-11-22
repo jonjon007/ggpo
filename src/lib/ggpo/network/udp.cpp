@@ -8,6 +8,8 @@
 #include "types.h"
 #include "udp.h"
 
+HINSTANCE hinstLib = NULL;
+/*
 SOCKET
 CreateSocket(int bind_port, int retries)
 {
@@ -36,19 +38,24 @@ CreateSocket(int bind_port, int retries)
    closesocket(s);
    return INVALID_SOCKET;
 }
-
+*/
 Udp::Udp() :
-   _socket(INVALID_SOCKET),
+   //_socket(INVALID_SOCKET),
    _callbacks(NULL)
 {
 }
 
 Udp::~Udp(void)
 {
-   if (_socket != INVALID_SOCKET) {
-      closesocket(_socket);
-      _socket = INVALID_SOCKET;
-   }
+ //  if (_socket != INVALID_SOCKET) {
+   //   closesocket(_socket);
+     // _socket = INVALID_SOCKET;
+   //}
+
+   /*if (hinstLib != NULL) {
+       // Free the DLL module.
+       FreeLibrary(hinstLib);
+   }*/
 }
 
 void
@@ -57,27 +64,75 @@ Udp::Init(int port, Poll *poll, Callbacks *callbacks)
    _callbacks = callbacks;
 
    _poll = poll;
-   _poll->RegisterLoop(this);
+   //_poll->RegisterLoop(this);
 
    Log("binding udp socket to port %d.\n", port);
-   _socket = CreateSocket(port, 0);
+  // _socket = CreateSocket(port, 0);
 }
 
-void
-Udp::SendTo(char *buffer, int len, int flags, struct sockaddr *dst, int destlen)
-{
-   struct sockaddr_in *to = (struct sockaddr_in *)dst;
+typedef int(__cdecl* SEND_TEXT_PROC)(const char*);
 
-   int res = sendto(_socket, buffer, len, flags, dst, destlen);
-   if (res == SOCKET_ERROR) {
+void
+//Udp::SendTo(char *buffer, int len, int flags, const char *dst, int destlen)
+Udp::SendTo(char* buffer, int len, int flags, struct sockaddr* dst, int destlen)
+{
+   // struct sockaddr_in *to = (struct sockaddr_in *)dst;
+
+   // int res = sendto(_socket, buffer, len, flags, dst, destlen);
+   // If the handle is valid, try to get the function address.
+   int res = 0;
+
+   if (hinstLib != NULL)
+   {
+       auto PartySendProc = (SEND_TEXT_PROC) GetProcAddress(hinstLib, "PartySampleApp_SendChatText");
+       // If the function address is valid, call the function.
+
+
+       if (NULL != PartySendProc)
+       {
+           (PartySendProc)(buffer);
+       }
+       else {
+           Log("Can't find PartySampleApp_SendChatText method!");
+       }
+
+   }
+
+   /*if (res == SOCKET_ERROR) {
       DWORD err = WSAGetLastError();
       DWORD e2 = WSAENOTSOCK;
       Log("unknown error in sendto (erro: %d  wsaerr: %d).\n", res, err);
       ASSERT(FALSE && "Unknown error in sendto");
-   }
-   Log("sent packet length %d to %s:%d (ret:%d).\n", len, inet_ntoa(to->sin_addr), ntohs(to->sin_port), res);
+   }*/
+ //  Log("sent packet length %d to %s:%d (ret:%d).\n", len, inet_ntoa(to->sin_addr), ntohs(to->sin_port), res);
+   Log("sent packet length %d.\n", len);
 }
 
+bool Udp::OnPlayerTextMessageReceived(const char* senderEntityId, const char* textMessage) {
+    for (;;) {
+        //int len = recvfrom(_socket, (char*)recv_buf, MAX_UDP_PACKET_SIZE, 0, (struct sockaddr*)&recv_addr, &recv_addr_len);
+        //int len = strlen(textMessage);
+        int len = sizeof(textMessage);
+
+        // TODO: handle len == 0... indicates a disconnect.
+
+        if (len == -1) {
+            int error = WSAGetLastError();
+            if (error != WSAEWOULDBLOCK) {
+                Log("recvfrom WSAGetLastError returned %d (%x).\n", error, error);
+            }
+            break;
+        }
+        else if (len > 0) {
+            //Log("recvfrom returned (len:%d  from:%s:%d).\n", len, inet_ntoa(recv_addr.sin_addr), ntohs(recv_addr.sin_port));
+            Log("Received message");
+            UdpMsg* msg = (UdpMsg*)textMessage;
+            _callbacks->OnMsg(senderEntityId, msg, len);
+        }
+    }
+    return true;
+}
+/*
 bool
 Udp::OnLoopPoll(void *cookie)
 {
@@ -105,7 +160,7 @@ Udp::OnLoopPoll(void *cookie)
    }
    return true;
 }
-
+*/
 
 void
 Udp::Log(const char *fmt, ...)

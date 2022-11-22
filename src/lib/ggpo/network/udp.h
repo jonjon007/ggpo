@@ -12,6 +12,7 @@
 #include "udp_msg.h"
 #include "ggponet.h"
 #include "ring_buffer.h"
+#include "party_app.h"
 
 #define MAX_UDP_ENDPOINTS     16
 
@@ -28,7 +29,7 @@ public:
 
    struct Callbacks {
       virtual ~Callbacks() { }
-      virtual void OnMsg(sockaddr_in &from, UdpMsg *msg, int len) = 0;
+      virtual void OnMsg(const char *from, UdpMsg *msg, int len) = 0;
    };
 
 
@@ -42,7 +43,8 @@ public:
    
    void SendTo(char *buffer, int len, int flags, struct sockaddr *dst, int destlen);
 
-   virtual bool OnLoopPoll(void *cookie);
+   //virtual bool OnLoopPoll(void *cookie);
+   bool Udp::OnPlayerTextMessageReceived(const char *senderEntityId, const char *textMessage);
 
 public:
    ~Udp(void);
