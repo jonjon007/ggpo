@@ -8,6 +8,8 @@
 #include "types.h"
 #include "udp.h"
 
+HINSTANCE hinstLib = NULL;
+
 SOCKET
 CreateSocket(int bind_port, int retries)
 {
@@ -63,10 +65,26 @@ Udp::Init(int port, Poll *poll, Callbacks *callbacks)
    _socket = CreateSocket(port, 0);
 }
 
+typedef int(__cdecl* SEND_TEXT_PROC)(const char*);
 void
 Udp::SendTo(char *buffer, int len, int flags, struct sockaddr *dst, int destlen)
 {
-   struct sockaddr_in *to = (struct sockaddr_in *)dst;
+    if (hinstLib != NULL)
+    {
+        auto PartySendProc = (SEND_TEXT_PROC)GetProcAddress(hinstLib, "PartySampleApp_SendChatText");
+        // If the function address is valid, call the function.
+
+
+        if (NULL != PartySendProc)
+        {
+            (PartySendProc)(buffer);
+        }
+        else {
+            Log("Can't find PartySampleApp_SendChatText method!");
+        }
+    }
+    
+    struct sockaddr_in *to = (struct sockaddr_in *)dst;
 
    int res = sendto(_socket, buffer, len, flags, dst, destlen);
    if (res == SOCKET_ERROR) {
