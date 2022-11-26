@@ -77,12 +77,16 @@ Udp::SendTo(char *buffer, int len, int flags, struct sockaddr *dst, int destlen)
 
         if (NULL != PartySendProc)
         {
+            int len = sizeof(buffer);
             (PartySendProc)(buffer);
+            Log("sent packet length %d.\n", len);
         }
         else {
             Log("Can't find PartySampleApp_SendChatText method!");
         }
     }
+
+    return;
     
     struct sockaddr_in *to = (struct sockaddr_in *)dst;
 
@@ -99,6 +103,7 @@ Udp::SendTo(char *buffer, int len, int flags, struct sockaddr *dst, int destlen)
 bool
 Udp::OnLoopPoll(void *cookie)
 {
+    return true;
    uint8          recv_buf[MAX_UDP_PACKET_SIZE];
    sockaddr_in    recv_addr;
    int            recv_addr_len;
@@ -122,6 +127,17 @@ Udp::OnLoopPoll(void *cookie)
       } 
    }
    return true;
+}
+
+bool
+Udp::OnMessageReceived(const char* buffer)
+{
+    int len = sizeof(buffer);
+    Log("recieved message of length %d.\n", len);
+    UdpMsg* msg = (UdpMsg*)buffer;
+    sockaddr_in socketaddr{};
+    _callbacks->OnMsg(socketaddr, msg, len);
+    return true;
 }
 
 

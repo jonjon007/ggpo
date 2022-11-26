@@ -43,7 +43,7 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks *cb,
     */
    _udp.Init(localport, &_poll, this);
 
-   _endpoints = new UdpProtocol[_num_players];
+   _endpoints = new UdpProtocol[2];
    memset(_local_connect_status, 0, sizeof(_local_connect_status));
    for (int i = 0; i < ARRAY_SIZE(_local_connect_status); i++) {
       _local_connect_status[i].last_frame = -1;
@@ -586,10 +586,10 @@ void
 Peer2PeerBackend::OnMsg(sockaddr_in &from, UdpMsg *msg, int len)
 {
    for (int i = 0; i < _num_players; i++) {
-      if (_endpoints[i].HandlesMsg(from, msg)) {
+     // if (_endpoints[i].HandlesMsg(from, msg)) {
          _endpoints[i].OnMsg(msg, len);
          return;
-      }
+      //}
    }
    for (int i = 0; i < _num_spectators; i++) {
       if (_spectators[i].HandlesMsg(from, msg)) {

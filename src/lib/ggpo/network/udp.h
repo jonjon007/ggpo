@@ -44,6 +44,8 @@ public:
 
    virtual bool OnLoopPoll(void *cookie);
 
+   virtual bool OnMessageReceived(const char* buffer);
+
 public:
    ~Udp(void);
 
