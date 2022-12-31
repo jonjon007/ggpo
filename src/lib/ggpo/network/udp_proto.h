@@ -67,9 +67,10 @@ public:
 
    void Synchronize();
    bool GetPeerConnectStatus(int id, int *frame);
+   int NetworkState();
    bool IsInitialized() { return _udp != NULL; }
-   bool IsSynchronized() { return _current_state == Running; }
-   bool IsRunning() { return _current_state == Running; }
+   bool IsSynchronized() { return NetworkState() == Running; }
+   bool IsRunning() { return NetworkState() == Running; }
    void SendInput(GameInput &input);
    void SendInputAck();
    bool HandlesMsg(sockaddr_in &from, UdpMsg *msg);

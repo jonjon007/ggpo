@@ -8,6 +8,7 @@
 #include "types.h"
 #include "udp_proto.h"
 #include "bitvector.h"
+#include "party_app.h"
 
 static const int UDP_HEADER_SIZE = 28;     /* Size of IP + UDP headers */
 static const int NUM_SYNC_PACKETS = 5;
@@ -85,11 +86,42 @@ UdpProtocol::Init(Udp *udp,
    poll.RegisterLoop(this);
 }
 
+typedef int(__cdecl* GET_STATE_PROC)();
+int
+UdpProtocol::NetworkState()
+{
+    if (hinstLib != NULL)
+    {
+        if (_current_state == Syncing)
+            return _current_state;
+        auto PartyGetNetworkStateProc = (GET_STATE_PROC)GetProcAddress(hinstLib, "PartySampleApp_GetNetworkState");
+        // If the function address is valid, call the function.
+        if (NULL != PartyGetNetworkStateProc)
+        {
+            int partyStatus = (PartyGetNetworkStateProc)();
+            switch (partyStatus) {
+            case 0: // Initialize
+                return 0; // Syncing
+            case 1: // WaitingForNetwork
+                return 0; // Syncing
+            case 2: // NetworkConnected
+                return 2; // Running
+            case 3: // WaitingForConnect
+                return 0; // Syncing
+            case 4: // Leaving
+                return 3; // Disconnected
+            }
+        }
+    }
+    Log("Failed to get network state! Returning -1");
+    return -1;
+}
+
 void
 UdpProtocol::SendInput(GameInput &input)
 {
    if (_udp) {
-      if (_current_state == Running) {
+      if (NetworkState() == Running) {
          /*
           * Check to see if this is a good time to adjust for the rift...
           */
@@ -148,7 +180,7 @@ UdpProtocol::SendPendingOutput()
    msg->u.input.ack_frame = _last_received_input.frame;
    msg->u.input.num_bits = offset;
 
-   msg->u.input.disconnect_requested = _current_state == Disconnected;
+   msg->u.input.disconnect_requested = NetworkState() == Disconnected;
    if (_local_connect_status) {
       memcpy(msg->u.input.peer_connect_status, _local_connect_status, sizeof(UdpMsg::connect_status) * UDP_MSG_MAX_PLAYERS);
    } else {
@@ -191,7 +223,7 @@ UdpProtocol::OnLoopPoll(void *cookie)
    unsigned int next_interval;
 
    PumpSendQueue();
-   switch (_current_state) {
+   switch (NetworkState()) {
    case Syncing:
       next_interval = (_state.sync.roundtrips_remaining == NUM_SYNC_PACKETS) ? SYNC_FIRST_RETRY_INTERVAL : SYNC_RETRY_INTERVAL;
       if (_last_send_time && _last_send_time + next_interval < now) {
@@ -343,7 +375,7 @@ UdpProtocol::OnMsg(UdpMsg *msg, int len)
    }
    if (handled) {
       _last_recv_time = Platform::GetCurrentTimeMS();
-      if (_disconnect_notify_sent && _current_state == Running) {
+      if (_disconnect_notify_sent && NetworkState() == Running) {
          QueueEvent(Event(Event::NetworkResumed));   
          _disconnect_notify_sent = false;
       }
@@ -444,6 +476,8 @@ UdpProtocol::LogMsg(const char *prefix, UdpMsg *msg)
       Log("%s input ack.\n", prefix);
       break;
    default:
+       Log("%s bullshit message.\n", prefix);
+       break;
       ASSERT(FALSE && "Unknown UdpMsg type.");
    }
 }
@@ -482,7 +516,7 @@ UdpProtocol::OnSyncRequest(UdpMsg *msg, int len)
 bool
 UdpProtocol::OnSyncReply(UdpMsg *msg, int len)
 {
-   if (_current_state != Syncing) {
+   if (NetworkState() != Syncing) {
       Log("Ignoring SyncReply while not synching.\n");
       return msg->hdr.magic == _remote_magic_number;
    }
@@ -523,7 +557,7 @@ UdpProtocol::OnInput(UdpMsg *msg, int len)
     */
    bool disconnect_requested = msg->u.input.disconnect_requested;
    if (disconnect_requested) {
-      if (_current_state != Disconnected && !_disconnect_event_sent) {
+      if (NetworkState() != Disconnected && !_disconnect_event_sent) {
          Log("Disconnecting endpoint on remote request.\n");
          QueueEvent(Event(Event::Disconnected));
          _disconnect_event_sent = true;
@@ -734,7 +768,7 @@ UdpProtocol::PumpSendQueue()
          _oo_packet.msg = entry.msg;
          _oo_packet.dest_addr = entry.dest_addr;
       } else {
-         ASSERT(entry.dest_addr.sin_addr.s_addr);
+         // ASSERT(entry.dest_addr.sin_addr.s_addr);
 
          _udp->SendTo((char *)entry.msg, entry.msg->PacketSize(), 0,
                       (struct sockaddr *)&entry.dest_addr, sizeof entry.dest_addr);

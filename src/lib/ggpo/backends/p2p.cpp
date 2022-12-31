@@ -583,7 +583,7 @@ Peer2PeerBackend::PlayerHandleToQueue(GGPOPlayerHandle player, int *queue)
 
  
 void
-Peer2PeerBackend::OnMsg(sockaddr_in &from, UdpMsg *msg, int len)
+Peer2PeerBackend::OnMsg(sockaddr_in &from, UdpMsg* msg, int len)
 {
    for (int i = 0; i < _num_players; i++) {
      // if (_endpoints[i].HandlesMsg(from, msg)) {

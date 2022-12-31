@@ -560,6 +560,10 @@ GGPO_API void __cdecl ggpo_logv(GGPOSession *,
                                 const char *fmt,
                                 va_list args);
 
+/* TODO: Write comment */
+GGPO_API int __cdecl playfab_on_msg(GGPOSession* ggpo,
+                                    const char* msg);
+
 #ifdef __cplusplus
 };
 #endif

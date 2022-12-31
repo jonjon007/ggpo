@@ -206,3 +206,16 @@ GGPOErrorCode ggpo_start_spectating(GGPOSession **session,
    return GGPO_OK;
 }
 
+int playfab_on_msg(GGPOSession* ggpo, const char* msg)
+{
+    uint8 recv_buf[MAX_UDP_PACKET_SIZE];
+    memcpy(recv_buf, msg, MAX_UDP_PACKET_SIZE);
+
+    Peer2PeerBackend* p2p = (Peer2PeerBackend*)ggpo;
+    UdpMsg* udpmsg = (UdpMsg*)recv_buf;
+    sockaddr_in socketaddr{};
+    int len = sizeof(msg);
+    p2p->OnMsg(socketaddr, udpmsg, len);
+    return 0;
+}
+

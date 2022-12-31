@@ -32,9 +32,8 @@ public:
    virtual GGPOErrorCode SetFrameDelay(GGPOPlayerHandle player, int delay);
    virtual GGPOErrorCode SetDisconnectTimeout(int timeout);
    virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout);
-
 public:
-   virtual void OnMsg(sockaddr_in &from, UdpMsg *msg, int len);
+	virtual void OnMsg(sockaddr_in& from, UdpMsg* msg, int len);
 
 protected:
    GGPOErrorCode PlayerHandleToQueue(GGPOPlayerHandle player, int *queue);
