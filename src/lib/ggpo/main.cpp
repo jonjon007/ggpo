@@ -209,7 +209,7 @@ GGPOErrorCode ggpo_start_spectating(GGPOSession **session,
 int playfab_on_msg(GGPOSession* ggpo, const char* msg)
 {
     uint8 recv_buf[MAX_UDP_PACKET_SIZE];
-    memcpy(recv_buf, msg, MAX_UDP_PACKET_SIZE);
+    memcpy((char*)recv_buf, msg, MAX_UDP_PACKET_SIZE);
 
     Peer2PeerBackend* p2p = (Peer2PeerBackend*)ggpo;
     UdpMsg* udpmsg = (UdpMsg*)recv_buf;

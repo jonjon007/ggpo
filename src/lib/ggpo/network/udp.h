@@ -12,6 +12,7 @@
 #include "udp_msg.h"
 #include "ggponet.h"
 #include "ring_buffer.h"
+#include <vector>
 
 #define MAX_UDP_ENDPOINTS     16
 
@@ -40,7 +41,8 @@ public:
 
    void Init(int port, Poll *p, Callbacks *callbacks);
    
-   void SendTo(char *buffer, int len, int flags, struct sockaddr *dst, int destlen);
+   //void SendTo(const std::vector<uint8_t> messageBytes, int len, int flags, struct sockaddr *dst, int destlen);
+   void SendTo(const char* buffer, int len, int flags, struct sockaddr* dst, int destlen);
 
    virtual bool OnLoopPoll(void *cookie);
 

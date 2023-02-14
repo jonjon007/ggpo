@@ -9,6 +9,7 @@
 #include "udp_proto.h"
 #include "bitvector.h"
 #include "party_app.h"
+// #include <vector>
 
 static const int UDP_HEADER_SIZE = 28;     /* Size of IP + UDP headers */
 static const int NUM_SYNC_PACKETS = 5;
@@ -113,7 +114,7 @@ UdpProtocol::NetworkState()
             }
         }
     }
-    Log("Failed to get network state! Returning -1");
+    Log("Failed to get network state! Returning -1\n");
     return -1;
 }
 
@@ -352,10 +353,10 @@ UdpProtocol::OnMsg(UdpMsg *msg, int len)
    int seq = msg->hdr.sequence_number;
    if (msg->hdr.type != UdpMsg::SyncRequest &&
        msg->hdr.type != UdpMsg::SyncReply) {
-      if (msg->hdr.magic != _remote_magic_number) {
+      /*if (msg->hdr.magic != _remote_magic_number) {
          LogMsg("recv rejecting", msg);
          return;
-      }
+      }*/
 
       // filter out out-of-order packets
       uint16 skipped = seq - _next_recv_seq;
@@ -451,6 +452,7 @@ UdpProtocol::Log(const char *fmt, ...)
 void
 UdpProtocol::LogMsg(const char *prefix, UdpMsg *msg)
 {
+   Log("\tMsg: %s\n", (const char*)msg);
    switch (msg->hdr.type) {
    case UdpMsg::SyncRequest:
       Log("%s sync-request (%d).\n", prefix,
@@ -769,8 +771,11 @@ UdpProtocol::PumpSendQueue()
          _oo_packet.dest_addr = entry.dest_addr;
       } else {
          // ASSERT(entry.dest_addr.sin_addr.s_addr);
+          // TODO: Is this count accurate?
+          //std::vector<uint8_t> messageBytes = std::vector<uint8_t>(entry.msg, entry.msg + entry.msg->PacketSize());
 
-         _udp->SendTo((char *)entry.msg, entry.msg->PacketSize(), 0,
+         _udp->SendTo((const char*)entry.msg, entry.msg->PacketSize(), 0,
+         //_udp->SendTo(messageBytes, entry.msg->PacketSize(), 0,
                       (struct sockaddr *)&entry.dest_addr, sizeof entry.dest_addr);
 
          delete entry.msg;
@@ -779,7 +784,7 @@ UdpProtocol::PumpSendQueue()
    }
    if (_oo_packet.msg && _oo_packet.send_time < Platform::GetCurrentTimeMS()) {
       Log("sending rogue oop!");
-      _udp->SendTo((char *)_oo_packet.msg, _oo_packet.msg->PacketSize(), 0,
+      _udp->SendTo((const char *)_oo_packet.msg, _oo_packet.msg->PacketSize(), 0,
                      (struct sockaddr *)&_oo_packet.dest_addr, sizeof _oo_packet.dest_addr);
 
       delete _oo_packet.msg;

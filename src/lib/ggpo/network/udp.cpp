@@ -65,13 +65,25 @@ Udp::Init(int port, Poll *poll, Callbacks *callbacks)
    _socket = CreateSocket(port, 0);
 }
 
+//typedef int(__cdecl* SEND_TEXT_PROC)(const std::vector<uint8_t>);
 typedef int(__cdecl* SEND_TEXT_PROC)(const char*);
 void
-Udp::SendTo(char *buffer, int len, int flags, struct sockaddr *dst, int destlen)
+Udp::SendTo(const char* buffer, int len, int flags, struct sockaddr* dst, int destlen)
+//Udp::SendTo(const std::vector<uint8_t> buffer, int len, int flags, struct sockaddr *dst, int destlen)
 {
     if (hinstLib != NULL)
     {
         auto PartySendProc = (SEND_TEXT_PROC)GetProcAddress(hinstLib, "PartySampleApp_SendChatText");
+        /*
+        const char* sampleMsg = "¼c";
+
+        uint8 recv_buf_s[MAX_UDP_PACKET_SIZE];
+        memcpy((char*)recv_buf_s, sampleMsg, MAX_UDP_PACKET_SIZE);
+
+        UdpMsg* udpmsg1 = (UdpMsg*)recv_buf_s;
+
+        auto PartySendProc = (SEND_TEXT_PROC)GetProcAddress(hinstLib, "PartySampleApp_SendNetworkBytes");
+        */
         // If the function address is valid, call the function.
 
 
@@ -87,7 +99,7 @@ Udp::SendTo(char *buffer, int len, int flags, struct sockaddr *dst, int destlen)
     }
 
     return;
-    
+    /*
     struct sockaddr_in *to = (struct sockaddr_in *)dst;
 
    int res = sendto(_socket, buffer, len, flags, dst, destlen);
@@ -98,6 +110,7 @@ Udp::SendTo(char *buffer, int len, int flags, struct sockaddr *dst, int destlen)
       ASSERT(FALSE && "Unknown error in sendto");
    }
    Log("sent packet length %d to %s:%d (ret:%d).\n", len, inet_ntoa(to->sin_addr), ntohs(to->sin_port), res);
+   */
 }
 
 bool
