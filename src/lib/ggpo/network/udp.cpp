@@ -66,14 +66,25 @@ Udp::Init(int port, Poll *poll, Callbacks *callbacks)
 }
 
 //typedef int(__cdecl* SEND_TEXT_PROC)(const std::vector<uint8_t>);
-typedef int(__cdecl* SEND_TEXT_PROC)(const char*);
+typedef int(__cdecl* SEND_TEXT_PROC)(const char*, int);
 void
 Udp::SendTo(const char* buffer, int len, int flags, struct sockaddr* dst, int destlen)
 //Udp::SendTo(const std::vector<uint8_t> buffer, int len, int flags, struct sockaddr *dst, int destlen)
 {
     if (hinstLib != NULL)
     {
-        auto PartySendProc = (SEND_TEXT_PROC)GetProcAddress(hinstLib, "PartySampleApp_SendChatText");
+        auto PartySendProc = (SEND_TEXT_PROC)GetProcAddress(hinstLib, "PartySampleApp_SendNetworkMessage");
+        const char* sampleMsg = "ul\x2";
+        const char* sampleMsg2 = "ul\x2";
+        char* sampleMsg3 = "ul\x2";
+        unsigned __int64 dataSize = len; // size of hdr plus size of u
+        char* sampleMsg4 = new char[dataSize];//init this with the correct size
+        char* sampleMsg5 = new char[dataSize];//init this with the correct size
+        std::copy(sampleMsg3, sampleMsg3 + dataSize, sampleMsg4);
+        // Insert null terminator character
+        // sampleMsg4[dataSize] = '\0';
+        memcpy(sampleMsg5, sampleMsg3, dataSize);
+        delete[] sampleMsg4;
         /*
         const char* sampleMsg = "¼c";
 
@@ -89,12 +100,13 @@ Udp::SendTo(const char* buffer, int len, int flags, struct sockaddr* dst, int de
 
         if (NULL != PartySendProc)
         {
-            int len = sizeof(buffer);
-            (PartySendProc)(buffer);
+            //int len = sizeof(buffer);
+            //(PartySendProc)(buffer);
+            (PartySendProc)(sampleMsg, len);
             Log("sent packet length %d.\n", len);
         }
         else {
-            Log("Can't find PartySampleApp_SendChatText method!");
+            Log("Can't find PartySampleApp_SendNetworkMessage method!");
         }
     }
 
