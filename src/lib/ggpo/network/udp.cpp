@@ -65,64 +65,24 @@ Udp::Init(int port, Poll *poll, Callbacks *callbacks)
    _socket = CreateSocket(port, 0);
 }
 
-//typedef int(__cdecl* SEND_TEXT_PROC)(const std::vector<uint8_t>);
 typedef int(__cdecl* SEND_TEXT_PROC)(const char*, int);
 void
 Udp::SendTo(const char* buffer, int len, int flags, struct sockaddr* dst, int destlen)
-//Udp::SendTo(const std::vector<uint8_t> buffer, int len, int flags, struct sockaddr *dst, int destlen)
 {
     if (hinstLib != NULL)
     {
         auto PartySendProc = (SEND_TEXT_PROC)GetProcAddress(hinstLib, "PartySampleApp_SendNetworkMessage");
-        const char* sampleMsg = "ul\x2";
-        const char* sampleMsg2 = "ul\x2";
-        char* sampleMsg3 = "ul\x2";
-        unsigned __int64 dataSize = len; // size of hdr plus size of u
-        char* sampleMsg4 = new char[dataSize];//init this with the correct size
-        char* sampleMsg5 = new char[dataSize];//init this with the correct size
-        std::copy(sampleMsg3, sampleMsg3 + dataSize, sampleMsg4);
-        // Insert null terminator character
-        // sampleMsg4[dataSize] = '\0';
-        memcpy(sampleMsg5, sampleMsg3, dataSize);
-        delete[] sampleMsg4;
-        /*
-        const char* sampleMsg = "¼c";
 
-        uint8 recv_buf_s[MAX_UDP_PACKET_SIZE];
-        memcpy((char*)recv_buf_s, sampleMsg, MAX_UDP_PACKET_SIZE);
-
-        UdpMsg* udpmsg1 = (UdpMsg*)recv_buf_s;
-
-        auto PartySendProc = (SEND_TEXT_PROC)GetProcAddress(hinstLib, "PartySampleApp_SendNetworkBytes");
-        */
         // If the function address is valid, call the function.
-
-
         if (NULL != PartySendProc)
         {
-            //int len = sizeof(buffer);
-            //(PartySendProc)(buffer);
-            (PartySendProc)(sampleMsg, len);
+            (PartySendProc)(buffer, len);
             Log("sent packet length %d.\n", len);
         }
         else {
             Log("Can't find PartySampleApp_SendNetworkMessage method!");
         }
     }
-
-    return;
-    /*
-    struct sockaddr_in *to = (struct sockaddr_in *)dst;
-
-   int res = sendto(_socket, buffer, len, flags, dst, destlen);
-   if (res == SOCKET_ERROR) {
-      DWORD err = WSAGetLastError();
-      DWORD e2 = WSAENOTSOCK;
-      Log("unknown error in sendto (erro: %d  wsaerr: %d).\n", res, err);
-      ASSERT(FALSE && "Unknown error in sendto");
-   }
-   Log("sent packet length %d to %s:%d (ret:%d).\n", len, inet_ntoa(to->sin_addr), ntohs(to->sin_port), res);
-   */
 }
 
 bool
