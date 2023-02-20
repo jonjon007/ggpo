@@ -452,7 +452,6 @@ UdpProtocol::Log(const char *fmt, ...)
 void
 UdpProtocol::LogMsg(const char *prefix, UdpMsg *msg)
 {
-   Log("\tMsg: %s\n", (const char*)msg);
    switch (msg->hdr.type) {
    case UdpMsg::SyncRequest:
       Log("%s sync-request (%d).\n", prefix,
