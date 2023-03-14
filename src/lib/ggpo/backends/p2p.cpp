@@ -587,10 +587,10 @@ void
 Peer2PeerBackend::OnMsg(sockaddr_in &from, UdpMsg* msg, int len)
 {
    for (int i = 0; i < _num_players; i++) {
-     // if (_endpoints[i].HandlesMsg(from, msg)) {
+      if (_endpoints[i].HandlesMsg(from, msg)) {
          _endpoints[i].OnMsg(msg, len);
          return;
-      //}
+      }
    }
    for (int i = 0; i < _num_spectators; i++) {
       if (_spectators[i].HandlesMsg(from, msg)) {
