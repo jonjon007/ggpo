@@ -354,10 +354,10 @@ UdpProtocol::OnMsg(UdpMsg *msg, int len)
    int seq = msg->hdr.sequence_number;
    if (msg->hdr.type != UdpMsg::SyncRequest &&
        msg->hdr.type != UdpMsg::SyncReply) {
-      /*if (msg->hdr.magic != _remote_magic_number) {
+      if (msg->hdr.magic != _remote_magic_number) {
          LogMsg("recv rejecting", msg);
          return;
-      }*/
+      }
 
       // filter out out-of-order packets
       uint16 skipped = seq - _next_recv_seq;
@@ -770,15 +770,12 @@ UdpProtocol::PumpSendQueue()
          _oo_packet.msg = entry.msg;
          _oo_packet.dest_addr = entry.dest_addr;
       } else {
-         // ASSERT(entry.dest_addr.sin_addr.s_addr);
-          // TODO: Is this count accurate?
-          //std::vector<uint8_t> messageBytes = std::vector<uint8_t>(entry.msg, entry.msg + entry.msg->PacketSize());
+          // ASSERT(entry.dest_addr.sin_addr.s_addr);
+          // TODO: Make the RingBuffer thread safe so that we don't run into counting issues
+            _udp->SendTo((const char*)entry.msg, entry.msg->PacketSize(), 0,
+                (struct sockaddr*)&entry.dest_addr, sizeof entry.dest_addr);
 
-         _udp->SendTo((const char*)entry.msg, entry.msg->PacketSize(), 0,
-         //_udp->SendTo(messageBytes, entry.msg->PacketSize(), 0,
-                      (struct sockaddr *)&entry.dest_addr, sizeof entry.dest_addr);
-
-         delete entry.msg;
+            delete entry.msg;
       }
       _send_queue.pop();
    }
