@@ -88,31 +88,20 @@ Udp::SendTo(const char* buffer, int len, int flags, struct sockaddr* dst, int de
 bool
 Udp::OnLoopPoll(void *cookie)
 {
-    // TODO: Fix loop here!!!!!!  OnMsg needs to occur here, as originally intended
+    while (!_recv_queue.empty()) {
+        const char* msg = _recv_queue.front();
+
+        sockaddr_in socketaddr{};
+        int len = sizeof(msg);
+
+        Log("recvfrom returned (len:%d  from:%s:%d).\n", len, inet_ntoa(socketaddr.sin_addr), ntohs(socketaddr.sin_port));
+        UdpMsg* udpmsg = (UdpMsg*)msg;
+        _callbacks->OnMsg(socketaddr, udpmsg, len);
+
+        delete msg;
+        _recv_queue.pop();
+    }
     return true;
-   uint8          recv_buf[MAX_UDP_PACKET_SIZE];
-   sockaddr_in    recv_addr;
-   int            recv_addr_len;
-
-   for (;;) {
-      recv_addr_len = sizeof(recv_addr);
-      int len = recvfrom(_socket, (char *)recv_buf, MAX_UDP_PACKET_SIZE, 0, (struct sockaddr *)&recv_addr, &recv_addr_len);
-
-      // TODO: handle len == 0... indicates a disconnect.
-
-      if (len == -1) {
-         int error = WSAGetLastError();
-         if (error != WSAEWOULDBLOCK) {
-            Log("recvfrom WSAGetLastError returned %d (%x).\n", error, error);
-         }
-         break;
-      } else if (len > 0) {
-         Log("recvfrom returned (len:%d  from:%s:%d).\n", len,inet_ntoa(recv_addr.sin_addr), ntohs(recv_addr.sin_port) );
-         UdpMsg *msg = (UdpMsg *)recv_buf;
-         _callbacks->OnMsg(recv_addr, msg, len);
-      } 
-   }
-   return true;
 }
 
 bool

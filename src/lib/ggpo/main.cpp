@@ -209,10 +209,9 @@ GGPOErrorCode ggpo_start_spectating(GGPOSession **session,
 int playfab_on_msg(GGPOSession* ggpo, const char* msg)
 {
     Peer2PeerBackend* p2p = (Peer2PeerBackend*)ggpo;
-    UdpMsg* udpmsg = (UdpMsg*)msg;
-    sockaddr_in socketaddr{};
-    int len = sizeof(msg);
-    p2p->OnMsg(socketaddr, udpmsg, len);
+    p2p->AddRecvMsg(msg);
+
+    // TODO: Does this need to be an int?
     return 0;
 }
 

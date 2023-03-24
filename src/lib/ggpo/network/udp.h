@@ -44,6 +44,8 @@ public:
    //void SendTo(const std::vector<uint8_t> messageBytes, int len, int flags, struct sockaddr *dst, int destlen);
    void SendTo(const char* buffer, int len, int flags, struct sockaddr* dst, int destlen);
 
+   void AddRecvMsg(char const* msg) { _recv_queue.push(msg); }
+
    virtual bool OnLoopPoll(void *cookie);
 
    virtual bool OnMessageReceived(const char* buffer);
@@ -54,6 +56,7 @@ public:
 protected:
    // Network transmission information
    SOCKET         _socket;
+   RingBuffer<const char*, 64> _recv_queue;
 
    // state management
    Callbacks      *_callbacks;
