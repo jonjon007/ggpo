@@ -88,6 +88,7 @@ Udp::SendTo(const char* buffer, int len, int flags, struct sockaddr* dst, int de
 bool
 Udp::OnLoopPoll(void *cookie)
 {
+    // TODO: Fix loop here!!!!!!  OnMsg needs to occur here, as originally intended
     return true;
    uint8          recv_buf[MAX_UDP_PACKET_SIZE];
    sockaddr_in    recv_addr;
