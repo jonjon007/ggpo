@@ -34,7 +34,7 @@ public:
    virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout);
 public:
 	virtual void OnMsg(sockaddr_in& from, UdpMsg* msg, int len);
-	virtual void AddRecvMsg(char const* msg) { _udp.AddRecvMsg(msg); }
+	virtual void AddRecvMsg(char const* msg, int len) { _udp.AddRecvMsg(msg, len); }
 
 
 protected:

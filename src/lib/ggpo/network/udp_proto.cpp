@@ -8,7 +8,7 @@
 #include "types.h"
 #include "udp_proto.h"
 #include "bitvector.h"
-#include "party_app.h"
+#include "udp.h"
 // #include <vector>
 
 static const int UDP_HEADER_SIZE = 28;     /* Size of IP + UDP headers */
@@ -87,7 +87,7 @@ UdpProtocol::Init(Udp *udp,
    poll.RegisterLoop(this);
 }
 
-typedef int(__cdecl* GET_STATE_PROC)();
+typedef int(__stdcall* GET_STATE_PROC)();
 int
 UdpProtocol::NetworkState()
 {
@@ -95,7 +95,7 @@ UdpProtocol::NetworkState()
     {
         if (_current_state == Syncing)
             return _current_state;
-        auto PartyGetNetworkStateProc = (GET_STATE_PROC)GetProcAddress(hinstLib, "PartySampleApp_GetNetworkState");
+        auto PartyGetNetworkStateProc = (GET_STATE_PROC)GetProcAddress(hinstLib, "PartyNet_GetNetworkState");
         // If the function address is valid, call the function.
         if (NULL != PartyGetNetworkStateProc)
         {

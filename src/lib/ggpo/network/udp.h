@@ -12,9 +12,13 @@
 #include "udp_msg.h"
 #include "ggponet.h"
 #include "ring_buffer.h"
+#include <mutex>
 #include <vector>
 
 #define MAX_UDP_ENDPOINTS     16
+
+// Handle to PartyNet.dll, set by UnityGGPO's PlayFab_Init and defined in udp.cpp.
+extern HINSTANCE hinstLib;
 
 static const int MAX_UDP_PACKET_SIZE = 4096;
 
@@ -44,19 +48,27 @@ public:
    //void SendTo(const std::vector<uint8_t> messageBytes, int len, int flags, struct sockaddr *dst, int destlen);
    void SendTo(const char* buffer, int len, int flags, struct sockaddr* dst, int destlen);
 
-   void AddRecvMsg(char const* msg) { _recv_queue.push(msg); }
+   // Copies the packet: the caller's buffer belongs to PlayFab Party and is reused once the
+   // state change is released, while this queue is drained later on GGPO's own thread.
+   void AddRecvMsg(char const* msg, int len);
 
    virtual bool OnLoopPoll(void *cookie);
-
-   virtual bool OnMessageReceived(const char* buffer);
 
 public:
    ~Udp(void);
 
 protected:
+   struct RecvPacket {
+      char* data;
+      int   len;
+   };
+
    // Network transmission information
    SOCKET         _socket;
-   RingBuffer<const char*, 64> _recv_queue;
+
+   // Filled on the PlayFab Party thread and drained on GGPO's; RingBuffer itself isn't thread-safe.
+   RingBuffer<RecvPacket, 64> _recv_queue;
+   std::mutex     _recv_lock;
 
    // state management
    Callbacks      *_callbacks;

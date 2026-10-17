@@ -65,53 +65,70 @@ Udp::Init(int port, Poll *poll, Callbacks *callbacks)
    _socket = CreateSocket(port, 0);
 }
 
-typedef int(__cdecl* SEND_TEXT_PROC)(const char*, int);
+typedef int(__stdcall* SEND_TEXT_PROC)(const char*, int);
 void
 Udp::SendTo(const char* buffer, int len, int flags, struct sockaddr* dst, int destlen)
 {
     if (hinstLib != NULL)
     {
-        auto PartySendProc = (SEND_TEXT_PROC)GetProcAddress(hinstLib, "PartySampleApp_SendNetworkMessage");
+        // Resolved once; this runs for every outbound packet.
+        static SEND_TEXT_PROC PartySendProc = (SEND_TEXT_PROC)GetProcAddress(hinstLib, "PartyNet_SendNetworkMessage");
 
-        // If the function address is valid, call the function.
         if (NULL != PartySendProc)
         {
             (PartySendProc)(buffer, len);
             Log("sent packet length %d.\n", len);
         }
         else {
-            Log("Can't find PartySampleApp_SendNetworkMessage method!");
+            Log("Can't find PartyNet_SendNetworkMessage method!");
         }
     }
+}
+
+void
+Udp::AddRecvMsg(char const* msg, int len)
+{
+    if (msg == NULL || len <= 0 || len > MAX_UDP_PACKET_SIZE) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(_recv_lock);
+
+    // Dropping beats overrunning the ring: GGPO re-sends anything that matters.
+    if (_recv_queue.size() >= 63) {
+        Log("recv queue full, dropping packet of length %d.\n", len);
+        return;
+    }
+
+    RecvPacket packet;
+    packet.data = new char[len];
+    packet.len = len;
+    memcpy(packet.data, msg, len);
+
+    _recv_queue.push(packet);
 }
 
 bool
 Udp::OnLoopPoll(void *cookie)
 {
-    while (!_recv_queue.empty()) {
-        const char* msg = _recv_queue.front();
+    while (true) {
+        RecvPacket packet;
+        {
+            std::lock_guard<std::mutex> lock(_recv_lock);
+            if (_recv_queue.empty()) {
+                break;
+            }
+            packet = _recv_queue.front();
+            _recv_queue.pop();
+        }
 
         sockaddr_in socketaddr{};
-        int len = sizeof(msg);
 
-        Log("recvfrom returned (len:%d  from:%s:%d).\n", len, inet_ntoa(socketaddr.sin_addr), ntohs(socketaddr.sin_port));
-        UdpMsg* udpmsg = (UdpMsg*)msg;
-        _callbacks->OnMsg(socketaddr, udpmsg, len);
+        Log("recvfrom returned (len:%d  from:%s:%d).\n", packet.len, inet_ntoa(socketaddr.sin_addr), ntohs(socketaddr.sin_port));
+        _callbacks->OnMsg(socketaddr, (UdpMsg*)packet.data, packet.len);
 
-        delete msg;
-        _recv_queue.pop();
+        delete[] packet.data;
     }
-    return true;
-}
-
-bool
-Udp::OnMessageReceived(const char* buffer)
-{
-    int len = sizeof(buffer);
-    Log("recieved message of length %d.\n", len);
-    UdpMsg* msg = (UdpMsg*)buffer;
-    sockaddr_in socketaddr{};
-    _callbacks->OnMsg(socketaddr, msg, len);
     return true;
 }
 

@@ -206,10 +206,10 @@ GGPOErrorCode ggpo_start_spectating(GGPOSession **session,
    return GGPO_OK;
 }
 
-int playfab_on_msg(GGPOSession* ggpo, const char* msg)
+int playfab_on_msg(GGPOSession* ggpo, const char* msg, int len)
 {
     Peer2PeerBackend* p2p = (Peer2PeerBackend*)ggpo;
-    p2p->AddRecvMsg(msg);
+    p2p->AddRecvMsg(msg, len);
 
     // TODO: Does this need to be an int?
     return 0;

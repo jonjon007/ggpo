@@ -560,9 +560,15 @@ GGPO_API void __cdecl ggpo_logv(GGPOSession *,
                                 const char *fmt,
                                 va_list args);
 
-/* TODO: Write comment */
+/*
+ * playfab_on_msg --
+ *
+ * Hands a packet received over PlayFab Party to the backend, which copies it and queues it for
+ * GGPO's own poll loop. Safe to call from the Party thread.
+ */
 GGPO_API int __cdecl playfab_on_msg(GGPOSession* ggpo,
-                                    const char* msg);
+                                    const char* msg,
+                                    int len);
 
 #ifdef __cplusplus
 };
