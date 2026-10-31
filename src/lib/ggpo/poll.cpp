@@ -8,6 +8,7 @@
 #include "types.h"
 #include "poll.h"
 
+#ifdef _WIN32
 Poll::Poll(void) :
    _handle_count(0),
    _start_time(0)
@@ -27,6 +28,12 @@ Poll::RegisterHandle(IPollSink *sink, HANDLE h, void *cookie)
    _handle_sinks[_handle_count] = PollSinkCb(sink, cookie);
    _handle_count++;
 }
+#else
+Poll::Poll(void) :
+   _start_time(0)
+{
+}
+#endif
 
 void
 Poll::RegisterMsgLoop(IPollSink *sink, void *cookie)
@@ -68,11 +75,19 @@ Poll::Pump(int timeout)
       timeout = MIN(timeout, maxwait);
    }
 
+#ifdef _WIN32
    res = WaitForMultipleObjects(_handle_count, _handles, false, timeout);
    if (res >= WAIT_OBJECT_0 && res < WAIT_OBJECT_0 + _handle_count) {
       i = res - WAIT_OBJECT_0;
       finished = !_handle_sinks[i].sink->OnHandlePoll(_handle_sinks[i].cookie) || finished;
    }
+#else
+   // No handles exist off Windows, so waiting on the dummy event reduces to a plain sleep.
+   (void)res;
+   if (timeout > 0) {
+      Platform::SleepMS(timeout);
+   }
+#endif
    for (i = 0; i < _msg_sinks.size(); i++) {
       PollSinkCb &cb = _msg_sinks[i];
       finished = !cb.sink->OnMsgPoll(cb.cookie) || finished;

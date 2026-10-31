@@ -87,7 +87,7 @@ UdpProtocol::Init(Udp *udp,
    poll.RegisterLoop(this);
 }
 
-typedef int(__stdcall* GET_STATE_PROC)();
+typedef int(PARTY_CALL* GET_STATE_PROC)();
 int
 UdpProtocol::NetworkState()
 {
@@ -95,7 +95,7 @@ UdpProtocol::NetworkState()
     {
         if (_current_state == Syncing)
             return _current_state;
-        auto PartyGetNetworkStateProc = (GET_STATE_PROC)GetProcAddress(hinstLib, "PartyNet_GetNetworkState");
+        static GET_STATE_PROC PartyGetNetworkStateProc = (GET_STATE_PROC)PartyLibSymbol("PartyNet_GetNetworkState");
         // If the function address is valid, call the function.
         if (NULL != PartyGetNetworkStateProc)
         {

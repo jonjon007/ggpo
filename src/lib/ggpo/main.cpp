@@ -11,12 +11,22 @@
 #include "backends/spectator.h"
 #include "ggponet.h"
 
+// Seeds rand(), which picks each protocol's magic number, once when the library loads.
+#ifdef _WIN32
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
    srand(Platform::GetCurrentTimeMS() + Platform::GetProcessID());
    return TRUE;
 }
+#else
+__attribute__((constructor))
+static void
+GgpoLibraryLoaded()
+{
+   srand(Platform::GetCurrentTimeMS() + Platform::GetProcessID());
+}
+#endif
 
 void
 ggpo_log(GGPOSession *ggpo, const char *fmt, ...)

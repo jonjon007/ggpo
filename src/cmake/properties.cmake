@@ -15,7 +15,8 @@ if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
 	set(GGPO_64BIT true)
 endif()
 
-set(CMAKE_CXX_STANDARD 98)
+# The transport needs C++11 (<mutex>); MSVC never honoured 98 anyway.
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 # Enable colored output

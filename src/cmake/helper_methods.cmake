@@ -15,6 +15,8 @@ function(add_common_flags target)
 		
 		set_property(TARGET ${target} APPEND PROPERTY COMPILE_OPTIONS $<$<CONFIG:Release>:/GL /Gy /Zi /O2 /Oi /MD -DNDEBUG>)
 	else()
-		# TODO_OTHER_COMPILERS_GO_HERE
+		# PIC because GGPO is a static library linked into the UnityGGPO plugin. The MSVC-only
+		# "#pragma warning" lines are noise to clang/gcc.
+		set_property(TARGET ${target} APPEND PROPERTY COMPILE_OPTIONS -fPIC -fvisibility=hidden -Wno-unknown-pragmas)
 	endif()
 endfunction()

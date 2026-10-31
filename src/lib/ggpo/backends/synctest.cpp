@@ -7,6 +7,10 @@
 
 #include "synctest.h"
 
+#ifndef _WIN32
+#include <sys/stat.h>
+#endif
+
 SyncTestBackend::SyncTestBackend(GGPOSessionCallbacks *cb,
                                  char *gamename,
                                  int frames,
@@ -167,9 +171,17 @@ SyncTestBackend::RaiseSyncError(const char *fmt, ...)
    va_end(args);
 
    puts(buf);
+#ifdef _WIN32
    OutputDebugStringA(buf);
+#else
+   fputs(buf, stderr);
+#endif
    EndLog();
+#ifdef _WIN32
    DebugBreak();
+#else
+   __builtin_debugtrap();
+#endif
 }
 
 GGPOErrorCode
@@ -187,8 +199,12 @@ SyncTestBackend::BeginLog(int saving)
    EndLog();
 
    char filename[MAX_PATH];
+#ifdef _WIN32
    CreateDirectoryA("synclogs", NULL);
-   sprintf(filename, "synclogs\\%s-%04d-%s.log",
+#else
+   mkdir("synclogs", 0755);
+#endif
+   sprintf(filename, "synclogs/%s-%04d-%s.log",
            saving ? "state" : "log",
            _sync.GetFrameCount(),
            _rollingback ? "replay" : "original");
@@ -209,9 +225,9 @@ void
 SyncTestBackend::LogSaveStates(SavedInfo &info)
 {
    char filename[MAX_PATH];
-   sprintf(filename, "synclogs\\state-%04d-original.log", _sync.GetFrameCount());
+   sprintf(filename, "synclogs/state-%04d-original.log", _sync.GetFrameCount());
    _callbacks.log_game_state(filename, (unsigned char *)info.buf, info.cbuf);
 
-   sprintf(filename, "synclogs\\state-%04d-replay.log", _sync.GetFrameCount());
+   sprintf(filename, "synclogs/state-%04d-replay.log", _sync.GetFrameCount());
    _callbacks.log_game_state(filename, _sync.GetLastSavedFrame().buf, _sync.GetLastSavedFrame().cbuf);
 }

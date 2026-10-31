@@ -12,13 +12,11 @@
 #include "udp_msg.h"
 #include "ggponet.h"
 #include "ring_buffer.h"
+#include "party_transport.h"
 #include <mutex>
 #include <vector>
 
 #define MAX_UDP_ENDPOINTS     16
-
-// Handle to PartyNet.dll, set by UnityGGPO's PlayFab_Init and defined in udp.cpp.
-extern HINSTANCE hinstLib;
 
 static const int MAX_UDP_PACKET_SIZE = 4096;
 
@@ -62,9 +60,6 @@ protected:
       char* data;
       int   len;
    };
-
-   // Network transmission information
-   SOCKET         _socket;
 
    // Filled on the PlayFab Party thread and drained on GGPO's; RingBuffer itself isn't thread-safe.
    RingBuffer<RecvPacket, 64> _recv_queue;

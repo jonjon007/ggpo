@@ -30,6 +30,13 @@ extern "C" {
 #  define GGPO_API
 #endif
 
+// The calling-convention keywords are MSVC-only; elsewhere the platform default is the same thing.
+#ifdef _WIN32
+#  define GGPO_CDECL __cdecl
+#else
+#  define GGPO_CDECL
+#endif
+
 #define GGPO_MAX_PLAYERS                  4
 #define GGPO_MAX_PREDICTION_FRAMES        8
 #define GGPO_MAX_SPECTATORS              32
@@ -566,7 +573,7 @@ GGPO_API void __cdecl ggpo_logv(GGPOSession *,
  * Hands a packet received over PlayFab Party to the backend, which copies it and queues it for
  * GGPO's own poll loop. Safe to call from the Party thread.
  */
-GGPO_API int __cdecl playfab_on_msg(GGPOSession* ggpo,
+GGPO_API int GGPO_CDECL playfab_on_msg(GGPOSession* ggpo,
                                     const char* msg,
                                     int len);
 

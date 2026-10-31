@@ -8,49 +8,13 @@
 #include "types.h"
 #include "udp.h"
 
-HINSTANCE hinstLib = NULL;
-
-SOCKET
-CreateSocket(int bind_port, int retries)
-{
-   SOCKET s;
-   sockaddr_in sin;
-   int port;
-   int optval = 1;
-
-   s = socket(AF_INET, SOCK_DGRAM, 0);
-   setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval, sizeof optval);
-   setsockopt(s, SOL_SOCKET, SO_DONTLINGER, (const char *)&optval, sizeof optval);
-
-   // non-blocking...
-   u_long iMode = 1;
-   ioctlsocket(s, FIONBIO, &iMode);
-
-   sin.sin_family = AF_INET;
-   sin.sin_addr.s_addr = htonl(INADDR_ANY);
-   for (port = bind_port; port <= bind_port + retries; port++) {
-      sin.sin_port = htons(port);
-      if (bind(s, (sockaddr *)&sin, sizeof sin) != SOCKET_ERROR) {
-         Log("Udp bound to port: %d.\n", port);
-         return s;
-      }
-   }
-   closesocket(s);
-   return INVALID_SOCKET;
-}
-
 Udp::Udp() :
-   _socket(INVALID_SOCKET),
    _callbacks(NULL)
 {
 }
 
 Udp::~Udp(void)
 {
-   if (_socket != INVALID_SOCKET) {
-      closesocket(_socket);
-      _socket = INVALID_SOCKET;
-   }
 }
 
 void
@@ -60,19 +24,16 @@ Udp::Init(int port, Poll *poll, Callbacks *callbacks)
 
    _poll = poll;
    _poll->RegisterLoop(this);
-
-   Log("binding udp socket to port %d.\n", port);
-   _socket = CreateSocket(port, 0);
 }
 
-typedef int(__stdcall* SEND_TEXT_PROC)(const char*, int);
+typedef int(PARTY_CALL* SEND_TEXT_PROC)(const char*, int);
 void
 Udp::SendTo(const char* buffer, int len, int flags, struct sockaddr* dst, int destlen)
 {
     if (hinstLib != NULL)
     {
         // Resolved once; this runs for every outbound packet.
-        static SEND_TEXT_PROC PartySendProc = (SEND_TEXT_PROC)GetProcAddress(hinstLib, "PartyNet_SendNetworkMessage");
+        static SEND_TEXT_PROC PartySendProc = (SEND_TEXT_PROC)PartyLibSymbol("PartyNet_SendNetworkMessage");
 
         if (NULL != PartySendProc)
         {

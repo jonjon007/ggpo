@@ -31,12 +31,14 @@ if(UNIX)
 endif()
 
 set(GGPO_LIB_INC_NETWORK
+	"lib/ggpo/network/party_transport.h"
 	"lib/ggpo/network/udp.h"
 	"lib/ggpo/network/udp_msg.h"
 	"lib/ggpo/network/udp_proto.h"
 )
 
 set(GGPO_LIB_SRC_NETWORK
+	"lib/ggpo/network/party_transport.cpp"
 	"lib/ggpo/network/udp.cpp"
 	"lib/ggpo/network/udp_proto.cpp"
 )
